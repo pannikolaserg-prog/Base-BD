@@ -1,5 +1,4 @@
 import psycopg2
-import requests
 
 
 class DBManager:
@@ -101,13 +100,3 @@ class DBManager:
         self.cursor.close()
         self.conn.close()
 
-
-def get_company(company_id):
-    url = f"https://api.hh.ru/employers/{company_id}"
-    return requests.get(url).json()
-
-
-def get_vacancies(company_id):
-    url = "https://api.hh.ru/vacancies"
-    params = {'employer_id': company_id, 'per_page': 20}
-    return requests.get(url, params=params).json().get('items', [])

@@ -1,4 +1,8 @@
-from src.DB_Manager import DBManager, get_company, get_vacancies
+from mypy.stubinfo import is_module_from_legacy_bundled_package
+from psycopg2 import connect
+
+from src.DB_Manager import DBManager
+from src.API_connect import get_company, get_vacancies
 
 def main():
     # 10 компаний с hh.ru
@@ -15,8 +19,8 @@ def main():
         78638  # Тинькофф
     ]
 
-    # Подключение к БД (измени пароль!)
-    db = DBManager('hh_db', 'postgres', 'your_password')
+    # Подключение к БД
+    db = DBManager('hh_db', 'postgres', 'Vacancy')
 
     try:
         db.create_tables()
