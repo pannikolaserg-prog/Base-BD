@@ -1,5 +1,7 @@
 from src.DB_Manager import DBManager
 from src.API_connect import get_company, get_vacancies
+import os
+from dotenv import load_dotenv
 
 def main():
     # 10 компаний с hh.ru
@@ -16,8 +18,14 @@ def main():
         78638  # Тинькофф
     ]
 
+    load_dotenv()
+
     # Подключение к БД
-    db = DBManager('hh_db', 'postgres', 'Vacancy')
+    db = DBManager(
+        db_name=os.getenv('DB_NAME'),
+        user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD')
+    )
 
     try:
         db.create_tables()
