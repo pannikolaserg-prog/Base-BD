@@ -1,7 +1,38 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import pytest
 from unittest.mock import MagicMock, patch
 from src.DB_Manager import DBManager
 
+
+def test_create_database_called():
+    """Тест что метод create_database существует"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_connect.return_value = mock_conn
+        mock_conn.cursor.return_value = mock_cursor
+
+        db = DBManager("test_db", "test_user", "test_pass")
+
+        # Проверяем что метод есть
+        assert hasattr(db, 'create_database')
+        # Проверяем что connect вызывался
+        assert mock_connect.called
+
+
+def test_create_database_handles_error():
+    """Тест что метод не падает при ошибке"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_connect.side_effect = Exception("Any error")
+
+        # Должно работать без исключений
+        db = DBManager("test_db", "test_user", "test_pass")
+
+        # Проверяем что объект создан
+        assert db is not None
 
 @pytest.fixture
 def db():

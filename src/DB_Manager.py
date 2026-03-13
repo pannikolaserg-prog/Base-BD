@@ -4,7 +4,15 @@ import psycopg2
 
 
 class DBManager:
-    def __init__(self, db_name: str, user: str, password: str) -> None:
+    def __init__(self, db_name, user, password):
+        self.db_name = db_name
+        self.user = user
+        self.password = password
+
+        # СОЗДАЕМ БД (новая строка)
+        self.create_database()
+
+        # Подключаемся
         self.conn = psycopg2.connect(
             host="localhost",
             database=db_name,
@@ -12,6 +20,29 @@ class DBManager:
             password=password
         )
         self.cursor = self.conn.cursor()
+
+    def create_database(self):
+        """Создает базу данных, если её нет"""
+        try:
+            conn = psycopg2.connect(
+                host="localhost",
+                database="postgres",
+                user=self.user,
+                password=self.password
+            )
+            conn.autocommit = True
+            cursor = conn.cursor()
+
+            cursor.execute(f"CREATE DATABASE {self.db_name}")
+            print(f"✅ База '{self.db_name}' создана")
+
+            cursor.close()
+            conn.close()
+
+        except psycopg2.errors.DuplicateDatabase:
+            print(f"ℹ️ База '{self.db_name}' уже существует")
+        except Exception as e:
+            print(f"❌ Ошибка: {e}")
 
     def create_tables(self) -> None:
         self.cursor.execute(
