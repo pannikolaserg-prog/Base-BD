@@ -1,10 +1,10 @@
-from typing import List, Optional, Tuple
+from typing import List, Tuple, Optional, Any, cast
 
 import psycopg2
 
 
 class DBManager:
-    def __init__(self, db_name, user, password):
+    def __init__(self, db_name: str, user: str, password: str) -> None:
         self.db_name = db_name
         self.user = user
         self.password = password
@@ -13,23 +13,13 @@ class DBManager:
         self.create_database()
 
         # Подключаемся
-        self.conn = psycopg2.connect(
-            host="localhost",
-            database=db_name,
-            user=user,
-            password=password
-        )
+        self.conn = psycopg2.connect(host="localhost", database=db_name, user=user, password=password)
         self.cursor = self.conn.cursor()
 
-    def create_database(self):
+    def create_database(self) -> None:
         """Создает базу данных, если её нет"""
         try:
-            conn = psycopg2.connect(
-                host="localhost",
-                database="postgres",
-                user=self.user,
-                password=self.password
-            )
+            conn = psycopg2.connect(host="localhost", database="postgres", user=self.user, password=self.password)
             conn.autocommit = True
             cursor = conn.cursor()
 
@@ -69,20 +59,11 @@ class DBManager:
 
     def insert_company(self, id: int, name: str) -> None:
         """Добавление компании в БД"""
-        self.cursor.execute(
-            "INSERT INTO companies (id, name) VALUES (%s, %s)",
-            (id, name)
-        )
+        self.cursor.execute("INSERT INTO companies (id, name) VALUES (%s, %s)", (id, name))
         self.conn.commit()
 
     def insert_vacancy(
-        self,
-        id: int,
-        name: str,
-        salary_from: Optional[int],
-        salary_to: Optional[int],
-        url: str,
-        company_id: int
+        self, id: int, name: str, salary_from: Optional[int], salary_to: Optional[int], url: str, company_id: int
     ) -> None:
         """Добавление вакансии в БД"""
         self.cursor.execute(
@@ -98,27 +79,33 @@ class DBManager:
         """
         Получает список всех компаний и количество вакансий у каждой компании
         """
-        self.cursor.execute("""
+        self.cursor.execute(
+            """
             SELECT c.name, COUNT(v.id)
             FROM companies c
             LEFT JOIN vacancies v ON c.id = v.company_id
             GROUP BY c.name
-        """)
+        """
+        )
         return self.cursor.fetchall()
 
     def get_all_vacancies(self) -> List[Tuple[str, str, Optional[int], Optional[int], str]]:
         """
         Получает список всех вакансий
         """
-        self.cursor.execute("""
+        self.cursor.execute(
+            """
             SELECT c.name, v.name, v.salary_from, v.salary_to, v.url
             FROM vacancies v
             JOIN companies c ON v.company_id = c.id
-        """)
+        """
+        )
         return self.cursor.fetchall()
 
     def get_avg_salary(self) -> float:
-        self.cursor.execute("""
+        """Средняя зарплата"""
+        self.cursor.execute(
+            """
             SELECT AVG(
                 CASE
                     WHEN salary_from IS NOT NULL AND salary_to IS NOT NULL
@@ -128,11 +115,12 @@ class DBManager:
                 END
             )
             FROM vacancies
-        """)
-        result = self.cursor.fetchone()
-        if result is None or result[0] is None:
+        """
+        )
+        row = self.cursor.fetchone()
+        if row is None or row[0] is None:
             return 0.0
-        return round(result[0], 2)
+        return round(float(row[0]), 2)
 
     def get_vacancies_with_higher_salary(self) -> List[Tuple[str, str, Optional[int], Optional[int], str]]:
         """
